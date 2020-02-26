@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"github.com/astaxie/beego/validation"
 	"hello/models"
 	"strconv"
 	_ "strconv"
@@ -35,6 +36,9 @@ func (c *UserController) Get() {
 }
 
 func (c *UserController) Post() {
+
+	valid := validation.Validation{}
+
 	fullname := c.GetString("full_name")
 	username := c.GetString("username")
 	password := c.GetString("password")
@@ -47,6 +51,22 @@ func (c *UserController) Post() {
 		Password: password,
 		Full_name: fullname,
 		Avatar: avatar,
+	}
+
+	val, err := valid.Valid(&user)
+
+	if err != nil {
+		c.Ctx.Output.Body([]byte("Error"))
+	}
+
+	if !val {
+		var errorMessage []string
+		for _, err := range valid.Errors {
+			errorMessage = append(errorMessage, err.Message)
+		}
+
+		c.Data["json"] = map[string]interface{}{"Data": errorMessage }
+		c.ServeJSON()
 	}
 
 	o.Insert(&user)
